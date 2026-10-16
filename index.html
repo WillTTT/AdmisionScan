@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="application-name" content="AdmisiónScan — UNSAAC" />
+  <meta name="description" content="Fotografía y escaneo documental para admisión en la UNSAAC." />
+  <title>AdmisiónScan | UNSAAC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom scrollbar for a cleaner mobile feel */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 2px;
+    }
+
+    body {
+      background-color: #761526;
+      /* UNSAAC guinda */
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      /* Prevent pull-to-refresh on mobile */
+    }
+
+    /* Safe area for iPhone notch / home indicator */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .pt-safe {
+      padding-top: var(--safe-top);
+    }
+
+    .pb-safe {
+      padding-bottom: var(--safe-bottom);
+    }
+
+    /* Loading Spinner Styles */
+    .loader {
+      border: 4px solid #1e293b;
+      border-radius: 50%;
+      border-top: 4px solid #D8B77A;
+      /* UNSAAC dorado */
+      width: 40px;
+      height: 40px;
+      -webkit-animation: spin 1s linear infinite;
+      /* Safari */
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Dirección de Admisión logo — experimental 3D spin */
+    @keyframes logo-spin-3d {
+      0% {
+        transform: perspective(800px) rotateY(0deg) rotateX(0deg);
+      }
+
+      25% {
+        transform: perspective(800px) rotateY(90deg) rotateX(6deg);
+      }
+
+      50% {
+        transform: perspective(800px) rotateY(180deg) rotateX(0deg);
+      }
+
+      75% {
+        transform: perspective(800px) rotateY(270deg) rotateX(-6deg);
+      }
+
+      100% {
+        transform: perspective(800px) rotateY(360deg) rotateX(0deg);
+      }
+    }
+
+    .logo-3d {
+      animation: logo-spin-3d 5s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .logo-3d {
+        animation: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* Splash Screen */
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background-color: #761526;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+
+    .splash-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-logo {
+      width: 7.5rem;
+      height: 7.5rem;
+      object-fit: contain;
+      margin-bottom: 1.5rem;
+    }
+
+    .splash-t1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .splash-t2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #D8B77A;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .splash-t3 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0 0 2rem 0;
+    }
+
+    .splash-loader {
+      margin-bottom: 0.75rem;
+    }
+
+    .splash-loading-text {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+    }
+
+    .splash-retry-btn {
+      background: none;
+      border: 1px solid #D8B77A;
+      color: #D8B77A;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-top: 1rem;
+      display: block;
+    }
+  </style>
+
+  <!-- OpenCV.js for Document Edge Detection -->
+  <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
+  <link rel="stylesheet" href="/index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "jspdf": "https://aistudiocdn.com/jspdf@^2.5.1",
+    "@imgly/background-removal": "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-CVsQaZ5q.js"></script>
+</head>
+
+<body>
+  <!-- Splash Screen (visible before React mounts) -->
+  <div id="splash" class="splash-screen">
+    <img src="/assets/branding/logo_admision.png" class="splash-logo logo-3d" alt="Logo Dirección de Admisión" />
+    <p class="splash-t1">Dirección de Admisión</p>
+    <p class="splash-t2">UNSAAC</p>
+    <p class="splash-t3">AdmisiónScan</p>
+    <div class="loader splash-loader"></div>
+    <p id="splash-text" class="splash-loading-text">Cargando recursos...</p>
+  </div>
+  <div id="root" class="h-screen w-full flex flex-col items-center justify-center">
+    <!-- Initial Loading State (visible before React mounts) -->
+    <div class="loader mb-4"></div>
+    <p class="text-slate-500 font-sans text-sm tracking-widest uppercase">Cargando...</p>
+  </div>
+  <script>
+    (function () {
+      var splash = document.getElementById('splash');
+      var hidden = false;
+      var booted = false;
+      var visibleAt = Date.now();
+      var MIN_VISIBLE_MS = 3000;
+      window.__SPLASH_HIDE__ = function () {
+        if (hidden) return;
+        hidden = true;
+        var elapsed = Date.now() - visibleAt;
+        var remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+        setTimeout(function () {
+          splash.classList.add('splash-hidden');
+          setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 500);
+        }, remaining);
+      };
+      window.__SPLASH_BOOT__ = function () { booted = true; };
+      setTimeout(function () {
+        if (!hidden && !booted) {
+          var txt = document.getElementById('splash-text');
+          if (txt) txt.textContent = 'La carga está tardando más de lo esperado.';
+        }
+      }, 15000);
+      setTimeout(function () {
+        if (!hidden && !booted) {
+          var loader = splash.querySelector('.splash-loader');
+          if (loader) loader.style.display = 'none';
+          var txt = document.getElementById('splash-text');
+          if (txt) {
+            txt.textContent = 'No se pudo iniciar la aplicación.';
+            var btn = document.createElement('button');
+            btn.className = 'splash-retry-btn';
+            btn.textContent = 'Reintentar';
+            btn.onclick = function () { location.reload(); };
+            txt.parentNode.appendChild(btn);
+          }
+        }
+      }, 30000);
+    })();
+  </script>
+</body>
+
+</html>

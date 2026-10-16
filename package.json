@@ -1,0 +1,9 @@
+{
+  "name": "admisionscan",
+  "version": "1.0.0",
+  "description": "AdmisiónScan: aplicación web estática para escaneo y procesamiento de documentos de admisión (UNSAAC), preparada para una futura publicación privada en GitHub y Cloudflare Pages.",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve ."
+  }
+}
